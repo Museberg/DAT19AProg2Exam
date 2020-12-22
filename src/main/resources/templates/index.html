@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Students</title>
+    <script type="text/javascript">
+        function preventAddFormFromSending(submitForm){
+            submitForm.submit(function (event){
+                event.preventDefault(); // Prevents the form from being sent
+                let name = $("#name").val();
+                let email = $("#email").val();
+                let supervisorId = $("#supervisor").val();
+                addStudent(name, email, supervisorId);
+            });
+        }
+
+
+        function addStudent(name, email, supervisorId){ // AJAX request
+            //console.log("Add student called with: [" + name + "] [" + email + "] [" + supervisorId + "]");
+            let addObject = {};
+            addObject["name"] = name;
+            addObject["email"] = email;
+            addObject["supervisorId"] = supervisorId;
+            $.ajax({
+                url:"/addStudent",
+                type:"POST",
+                contentType:"application/JSON",
+                data: JSON.stringify(addObject),
+                success:function (data){
+                    console.log("SUCCESS response from server med id : " + data.id);
+                    // Adding Student row to table
+                    $("#studentsTable").append("<tr id='" + data.id + "'> " +
+                        "<td> <input type='text' value='" + data.name + "' id='Name" + data.id + "'></td>" +
+                        "<td> <input type='email' value='" + data.email + "' id='Email" + data.id + "'></td>" +
+                        "<td> <select name='" + data.email + "Select' id='Supervisor" + data.id + "'> " +
+                        "</select></td>" +
+                        "</tr>");
+
+                    // Adding all Supervisor options for new user added via ajax
+                    $("#supervisor option").each(function()
+                    {
+                        let o = new Option("Teacher " + $(this).val(), $(this).val());
+                        // Making sure the selected option is also selected in the list
+                        if($(this).val() == data.supervisorId){
+                            o = new Option("Teacher " + $(this).val(), $(this).val(), true, true);
+                        }
+                        $('[name="' + data.email + 'Select"]').append(o);
+
+                    });
+
+                    // Adding update button
+                    let ub = $('<td> <form id=Update' + data.id + '><button form=Update' + data.id + ' type="submit" class="btn btn-primary">Update</button> </form> </td>');
+                    $('#' + data.id).append(ub);
+
+                    // Adding delete button
+                    let db = $('<td> <form id=Delete' + data.id + '><button form=Delete' + data.id + ' type="submit" class="btn btn-danger">Delete</button> </form> </td>');
+                    $('#' + data.id).append(db);
+                },
+                error:function (data){
+                    console.log("ERROR response from server");
+                }
+            });
+        }
+
+
+        function deleteStudent(id){
+            console.log("Delete student called with: [" + id + "]");
+            let deleteObject = {};
+            deleteObject["id"] = id;
+            $.ajax({
+                url:"/deleteStudent",
+                type:"POST",
+                contentType:"application/JSON",
+                data: JSON.stringify(deleteObject),
+                success:function (data){
+                    // Removing row
+                    $("#" + data.id).remove();
+                    console.log("SUCCESS response from server");
+                },
+                error:function (data){
+                    console.log("ERROR response from server");
+                }
+            });
+        }
+
+        function updateStudent(id, name, email, supervisorId){
+            //console.log("Update called with: [" + id + "] [" + name + "] [" + email + "] [" + supervisorId + "]");
+            let updateObject = {};
+            updateObject["id"] = id;
+            updateObject["name"] = name;
+            updateObject["email"] = email;
+            updateObject["supervisorId"] = supervisorId;
+            $.ajax({
+                url:"/updateStudent",
+                type:"POST",
+                contentType:"application/JSON",
+                data: JSON.stringify(updateObject),
+                success:function (data){
+                    // Nothing needs to be done here, as the changes are already rendered on the page
+                    // Only change in the DB needs to happen - handled by the RestController
+                    console.log("SUCCESS response from server");
+                },
+                error:function (data){
+                    console.log("ERROR response from server");
+                }
+            });
+        }
+
+        function getAll(){
+            var Student = new Object();
+            console.log("GET ALL CALLED");
+            $.ajax({
+                type : 'POST',
+                url : '/getAll',
+                dataType : 'json',
+                data : JSON.stringify(Student),
+                contentType : 'application/json',
+                success:function (data){
+                    // Removing all rows (except for header row)
+                    $("#studentsTable").find("tr:gt(0)").remove();
+                    // Drawing all rows again...
+                    for (var i = 0, len = data.length; i < len; ++i){
+                        let s = data[i];
+
+                        $("#studentsTable").append("<tr id='" + s.id + "'> " +
+                            "<td> <input type='text' value='" + s.name + "' id='Name" + s.id + "'></td>" +
+                            "<td> <input type='email' value='" + s.email + "' id='Email" + s.id + "'></td>" +
+                            "<td> <select name='" + s.email + "Select' id='Supervisor" + s.id + "'> " +
+                            "</select></td>" +
+                            "</tr>");
+
+                        // Adding all supervisor options
+                        $("#supervisor option").each(function()
+                        {
+                            let o = new Option("Teacher " + $(this).val(), $(this).val());
+                            // Making sure the selected option is also selected in the list
+                            if($(this).val() == s.supervisorId){
+                                o = new Option("Teacher " + $(this).val(), $(this).val(), true, true);
+                            }
+                            $('[name="' + s.email + 'Select"]').append(o);
+
+                        });
+
+                        // Adding update button
+                        let ub = $('<td> <form id=Update' + s.id + '><button form=Update' + s.id + ' type="submit" class="btn btn-primary">Update</button> </form> </td>');
+                        $('#' + s.id).append(ub);
+
+                        // Adding delete button
+                        let db = $('<td> <form id=Delete' + s.id + '><button form=Delete' + s.id + ' type="submit" class="btn btn-danger">Delete</button> </form> </td>');
+                        $('#' + s.id).append(db);
+                    }
+                    console.log("SUCCESS response from server");
+                },
+                error:function (data){
+                    console.log("ERROR response from server");
+                }
+            });
+        }
+
+        function checkjQuery(){
+            if(typeof jQuery != undefined){
+                console.log("jQuery is loaded")
+            }else {
+                console.log("jQuery is NOT loaded")
+            }
+        }
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+</head>
+<body>
+<h1>Add student:</h1>
+<form th:object="${student}" id="addStudentForm">
+    <table>
+        <tr>
+            <td><label>Name:</label></td>
+            <td><input type="text" th:field="*{name}"></td>
+        </tr>
+
+        <tr>
+            <td><label>E-mail:</label></td>
+            <td><input type="email" th:field="*{email}"></td>
+        </tr>
+
+        <tr>
+            <td><label>Supervisor:</label></td>
+            <td>
+                <select th:field="${student.supervisor}">
+                    <option
+                        th:each="supervisor, stat : ${supervisors}"
+                        th:value="${supervisor.id}"
+                        th:text="Teacher + ' ' + ${stat.index + 1}"
+                    ></option>
+                </select>
+            </td>
+        </tr>
+    </table>
+    <button type="submit" class="btn btn-success">Add student</button>
+</form>
+
+<!-- Who needs CSS? -->
+<br>
+<br>
+<!-- Who needs CSS? -->
+
+<h1>List of students:</h1>
+<table id="studentsTable" class="table">
+    <thead>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Supervisor</th>
+    <th></th>
+    <th></th>
+    </thead>
+    <tr th:each="student : ${students}" th:id="${student.id}">
+        <form th:id="Update + ${student.id}">
+            <td>
+                <input type="text" th:value="${student.name}" th:id="Name + ${student.id}">
+            </td>
+
+            <td>
+                <input type="email" th:value="${student.email}" th:id="Email + ${student.id}">
+            </td>
+
+            <td>
+                <select th:id="Supervisor + ${student.id}">
+                    <option
+                        th:each="supervisor: ${supervisors}"
+                        th:value="${supervisor.id}"
+                        th:text="Teacher + ' ' + ${supervisor.id}"
+                        th:selected="${student.supervisor.id == supervisor.id}"
+                        >
+                    </option>
+                </select>
+            </td>
+
+            <td>
+                <button th:form="Update + ${student.id}" type="submit" class="btn btn-primary">Update</button>
+            </td>
+        </form>
+
+        <td>
+            <form th:id="Delete + ${student.id}">
+                <button th:form="Delete + ${student.id}" type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<form id="getAll">
+    <button type="submit" class="btn btn-primary">Refresh</button>
+</form>
+
+<script type="text/javascript">
+    checkjQuery();
+    preventAddFormFromSending($("#addStudentForm"));
+
+    var id = '';
+    $(function() {
+        $(document).on('submit', 'form', function(event){
+            event.preventDefault();
+            let form = $(this);
+            let id = form.attr('id').toString();
+            //console.log(id + ' form submitted');
+
+            let studentId = id.substring(6);
+            console.log("STUDENT ID: [" + studentId + "]")
+
+            // Called from Delete button
+            if(~id.indexOf("Delete")){
+                deleteStudent(studentId);
+            }
+
+            // Called from Update button
+            else if(~id.indexOf("Update")){
+                let name = $("#Name" + studentId).val();
+                let email = $("#Email" + studentId).val()
+                let supervisorId = $("#Supervisor" + studentId).val()
+                updateStudent(studentId, name, email, supervisorId);
+                //console.log("Update called with: [" + name + "] [" + email + "] [" + supervisorId + "]");
+
+            }
+
+            // Called from Refresh button
+            else if(~id.indexOf("getAll")){
+                getAll();
+            }
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+
+</body>
+</html>
