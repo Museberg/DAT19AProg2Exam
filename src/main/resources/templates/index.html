@@ -107,7 +107,7 @@
         }
 
         function getAll(){
-            var Student = new Object();
+            let Student = new Object();
             console.log("GET ALL CALLED");
             $.ajax({
                 type : 'POST',
@@ -119,7 +119,7 @@
                     // Removing all rows (except for header row)
                     $("#studentsTable").find("tr:gt(0)").remove();
                     // Drawing all rows again...
-                    for (var i = 0, len = data.length; i < len; ++i){
+                    for (let i = 0, len = data.length; i < len; ++i){
                         let s = data[i];
 
                         $("#studentsTable").append("<tr id='" + s.id + "'> " +
@@ -255,7 +255,7 @@
     checkjQuery();
     preventAddFormFromSending($("#addStudentForm"));
 
-    var id = '';
+    let id = '';
     $(function() {
         $(document).on('submit', 'form', function(event){
             event.preventDefault();
