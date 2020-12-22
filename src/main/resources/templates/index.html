@@ -260,11 +260,9 @@
         $(document).on('submit', 'form', function(event){
             event.preventDefault();
             let form = $(this);
-            let id = form.attr('id').toString();
-            //console.log(id + ' form submitted');
+            let id = form.attr('id').toString(); // Id of from
 
-            let studentId = id.substring(6);
-            console.log("STUDENT ID: [" + studentId + "]")
+            let studentId = id.substring(6); // Update and Delete are both 6 characters long - yay
 
             // Called from Delete button
             if(~id.indexOf("Delete")){
